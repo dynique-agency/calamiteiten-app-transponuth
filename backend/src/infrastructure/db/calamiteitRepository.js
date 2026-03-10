@@ -35,14 +35,14 @@ const db = require('./verbinding');
  * @returns {Promise<object[]>}
  */
 async function haalAlleOp({ status, klantId, makerId, rijksweg, startDatum, eindDatum, limit = 50, offset = 0 } = {}) {
-  // LEFT JOIN Klant zodat calamiteiten met null klant_id (onbekende opdrachtgever) ook worden opgehaald
+  // LEFT JOIN klant zodat calamiteiten met null klant_id (onbekende opdrachtgever) ook worden opgehaald
   let sql = `
     SELECT
       c.*,
       k.naam  AS klant_naam,
       g.naam  AS maker_naam
-    FROM Calamiteit c
-    LEFT JOIN Klant     k ON k.id = c.klant_id
+    FROM calamiteit c
+    LEFT JOIN klant     k ON k.id = c.klant_id
     JOIN      Gebruiker g ON g.id = c.maker_id
     WHERE 1=1
   `;
@@ -72,8 +72,8 @@ async function haalVolledigOpId(id) {
   // Hoofdrecord
   const [cal] = await db.query(
     `SELECT c.*, k.naam AS klant_naam, g.naam AS maker_naam
-     FROM Calamiteit c
-     LEFT JOIN Klant     k ON k.id = c.klant_id
+     FROM calamiteit c
+     LEFT JOIN klant     k ON k.id = c.klant_id
      JOIN      Gebruiker g ON g.id = c.maker_id
      WHERE c.id = ?`,
     [id]
@@ -83,36 +83,36 @@ async function haalVolledigOpId(id) {
   // Ingezet materieel (met snapshot-tarieven)
   const [materieel] = await db.query(
     `SELECT cm.*, m.naam AS materieel_naam, m.eenheid
-     FROM Calamiteit_Materieel cm
-     JOIN Materieel m ON m.id = cm.materieel_id
+     FROM calamiteit_materieel cm
+     JOIN materieel m ON m.id = cm.materieel_id
      WHERE cm.calamiteit_id = ?`,
     [id]
   );
 
   // Toeslagen
   const [toeslagen] = await db.query(
-    'SELECT * FROM Calamiteit_Toeslag WHERE calamiteit_id = ?',
+    'SELECT * FROM calamiteit_toeslag WHERE calamiteit_id = ?',
     [id]
   );
 
   // Collega-medewerkers
   const [collegas] = await db.query(
     `SELECT g.id, g.naam
-     FROM Calamiteit_Collega cc
-     JOIN Gebruiker g ON g.id = cc.gebruiker_id
+     FROM calamiteit_collega cc
+     JOIN gebruiker g ON g.id = cc.gebruiker_id
      WHERE cc.calamiteit_id = ?`,
     [id]
   );
 
   // CROW-plaatsingen
   const [plaatsingen] = await db.query(
-    'SELECT * FROM Calamiteit_Plaatsing WHERE calamiteit_id = ? ORDER BY volgorde',
+    'SELECT * FROM calamiteit_plaatsing WHERE calamiteit_id = ? ORDER BY volgorde',
     [id]
   );
 
   // Foto's
   const [fotos] = await db.query(
-    'SELECT * FROM Foto WHERE calamiteit_id = ? ORDER BY aangemaakt_op',
+    'SELECT * FROM foto WHERE calamiteit_id = ? ORDER BY aangemaakt_op',
     [id]
   );
 
@@ -127,7 +127,7 @@ async function haalVolledigOpId(id) {
  * @returns {Promise<object|null>}
  */
 async function haalOpOpId(id) {
-  const [rijen] = await db.query('SELECT * FROM Calamiteit WHERE id = ?', [id]);
+  const [rijen] = await db.query('SELECT * FROM calamiteit WHERE id = ?', [id]);
   return rijen[0] ?? null;
 }
 
@@ -141,7 +141,7 @@ async function haalOpOpId(id) {
  * @returns {Promise<number>} Het nieuwe ID
  */
 async function maakAan(data, conn = db) {
-  const [resultaat] = await conn.query('INSERT INTO Calamiteit SET ?', [data]);
+  const [resultaat] = await conn.query('INSERT INTO calamiteit SET ?', [data]);
   return resultaat.insertId;
 }
 
@@ -168,7 +168,7 @@ async function voegMaterieelToe(calamiteitId, items, conn = db) {
   ]);
 
   await conn.query(
-    `INSERT INTO Calamiteit_Materieel
+    `INSERT INTO calamiteit_materieel
        (calamiteit_id, materieel_id, aantal, gefactureerd_basistarief_snapshot, gefactureerd_uurtarief_snapshot)
      VALUES ?`,
     [rijen]
@@ -194,7 +194,7 @@ async function voegToeslagenToe(calamiteitId, toeslagen, conn = db) {
   ]);
 
   await conn.query(
-    `INSERT INTO Calamiteit_Toeslag
+    `INSERT INTO calamiteit_toeslag
        (calamiteit_id, naam_toeslag, uurtarief_snapshot, aantal_uren)
      VALUES ?`,
     [rijen]
@@ -213,7 +213,7 @@ async function voegCollegasToe(calamiteitId, gebruikerIds, conn = db) {
 
   const rijen = gebruikerIds.map((uid) => [calamiteitId, uid]);
   await conn.query(
-    'INSERT INTO Calamiteit_Collega (calamiteit_id, gebruiker_id) VALUES ?',
+    'INSERT INTO calamiteit_collega (calamiteit_id, gebruiker_id) VALUES ?',
     [rijen]
   );
 }
@@ -238,7 +238,7 @@ async function voegPlaatsingenToe(calamiteitId, plaatsingen, conn = db) {
   ]);
 
   await conn.query(
-    `INSERT INTO Calamiteit_Plaatsing
+    `INSERT INTO calamiteit_plaatsing
        (calamiteit_id, object_naam, hmp_positie, is_handmatig, volgorde)
      VALUES ?`,
     [rijen]
@@ -255,7 +255,7 @@ async function voegPlaatsingenToe(calamiteitId, plaatsingen, conn = db) {
  * @param {object} [conn]
  */
 async function wijzig(id, data, conn = db) {
-  await conn.query('UPDATE Calamiteit SET ? WHERE id = ?', [data, id]);
+  await conn.query('UPDATE calamiteit SET ? WHERE id = ?', [data, id]);
 }
 
 /**
@@ -265,7 +265,7 @@ async function wijzig(id, data, conn = db) {
  * @param {object} [conn]
  */
 async function verwijderMaterieel(calamiteitId, conn = db) {
-  await conn.query('DELETE FROM Calamiteit_Materieel WHERE calamiteit_id = ?', [calamiteitId]);
+  await conn.query('DELETE FROM calamiteit_materieel WHERE calamiteit_id = ?', [calamiteitId]);
 }
 
 /**
@@ -275,7 +275,7 @@ async function verwijderMaterieel(calamiteitId, conn = db) {
  * @param {object} [conn]
  */
 async function verwijderToeslagen(calamiteitId, conn = db) {
-  await conn.query('DELETE FROM Calamiteit_Toeslag WHERE calamiteit_id = ?', [calamiteitId]);
+  await conn.query('DELETE FROM calamiteit_toeslag WHERE calamiteit_id = ?', [calamiteitId]);
 }
 
 /**
@@ -285,7 +285,7 @@ async function verwijderToeslagen(calamiteitId, conn = db) {
  * @param {object} [conn]
  */
 async function verwijderPlaatsingen(calamiteitId, conn = db) {
-  await conn.query('DELETE FROM Calamiteit_Plaatsing WHERE calamiteit_id = ?', [calamiteitId]);
+  await conn.query('DELETE FROM calamiteit_plaatsing WHERE calamiteit_id = ?', [calamiteitId]);
 }
 
 /**
@@ -295,7 +295,7 @@ async function verwijderPlaatsingen(calamiteitId, conn = db) {
  * @param {object} [conn]
  */
 async function verwijderCollegas(calamiteitId, conn = db) {
-  await conn.query('DELETE FROM Calamiteit_Collega WHERE calamiteit_id = ?', [calamiteitId]);
+  await conn.query('DELETE FROM calamiteit_collega WHERE calamiteit_id = ?', [calamiteitId]);
 }
 
 module.exports = {

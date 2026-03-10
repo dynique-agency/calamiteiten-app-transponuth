@@ -3,26 +3,26 @@
 const db = require('./verbinding');
 
 async function haalAlleActiefOp() {
-  const [rijen] = await db.query('SELECT * FROM Materieel WHERE actief = 1 ORDER BY naam');
+  const [rijen] = await db.query('SELECT * FROM materieel WHERE actief = 1 ORDER BY naam');
   return rijen;
 }
 
 async function haalOpOpId(id) {
-  const [rijen] = await db.query('SELECT * FROM Materieel WHERE id = ?', [id]);
+  const [rijen] = await db.query('SELECT * FROM materieel WHERE id = ?', [id]);
   return rijen[0] ?? null;
 }
 
 async function maakAan(data) {
-  const [resultaat] = await db.query('INSERT INTO Materieel SET ?', [data]);
+  const [resultaat] = await db.query('INSERT INTO materieel SET ?', [data]);
   return resultaat.insertId;
 }
 
 async function wijzig(id, data) {
-  await db.query('UPDATE Materieel SET ? WHERE id = ?', [data, id]);
+  await db.query('UPDATE materieel SET ? WHERE id = ?', [data, id]);
 }
 
 async function deactiveer(id) {
-  await db.query('UPDATE Materieel SET actief = 0 WHERE id = ?', [id]);
+  await db.query('UPDATE materieel SET actief = 0 WHERE id = ?', [id]);
 }
 
 module.exports = { haalAlleActiefOp, haalOpOpId, maakAan, wijzig, deactiveer };

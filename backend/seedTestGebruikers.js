@@ -64,7 +64,7 @@ async function seed() {
     //   - Bestaat de external_id al? → bijwerken (naam, hash, rol, actief)
     //   - Bestaat de external_id nog niet? → nieuw record invoegen
     const sql = `
-      INSERT INTO Gebruiker (external_id, naam, wachtwoord_hash, rol, actief)
+      INSERT INTO gebruiker (external_id, naam, wachtwoord_hash, rol, actief)
       VALUES (?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         naam             = VALUES(naam),

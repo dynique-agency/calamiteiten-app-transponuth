@@ -20,8 +20,11 @@ logs/*
 .DS_Store
 Thumbs.db
 
-# ── Tijdelijke hulpscripts ────────────────────────────────────────────────────
+# ── Tijdelijke hulpscripts (bevatten credentials, nooit committen) ────────────
 resetDatabase.js
+seedAiven.js
+initAiven.js
+seedAivenGebruikers.js
 
 # ── Build output ──────────────────────────────────────────────────────────────
 dist/

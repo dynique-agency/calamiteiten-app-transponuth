@@ -17,7 +17,7 @@ const logger     = require('./logger');
 async function schrijfAuditLog({ gebruikerId, actie, tabelNaam, recordId, oudeWaarde, nieuweWaarde }) {
   try {
     const sql = `
-      INSERT INTO Audit_Log
+      INSERT INTO audit_log
         (gebruiker_id, actie, tabel_naam, record_id, oude_waarde, nieuwe_waarde)
       VALUES (?, ?, ?, ?, ?, ?)
     `;

@@ -9,7 +9,7 @@ const db = require('./verbinding');
 async function haalAlleOp() {
   const [rijen] = await db.query(
     `SELECT id, external_id, naam, rol, actief, aangemaakt_op
-     FROM Gebruiker
+     FROM gebruiker
      ORDER BY naam`
   );
   return rijen;
@@ -22,7 +22,7 @@ async function haalAlleOp() {
  */
 async function haalOpOpId(id) {
   const [rijen] = await db.query(
-    'SELECT id, external_id, naam, rol, actief FROM Gebruiker WHERE id = ?',
+    'SELECT id, external_id, naam, rol, actief FROM gebruiker WHERE id = ?',
     [id]
   );
   return rijen[0] ?? null;
@@ -35,7 +35,7 @@ async function haalOpOpId(id) {
  */
 async function haalOpOpNaam(naam) {
   const [rijen] = await db.query(
-    'SELECT * FROM Gebruiker WHERE naam = ? AND actief = 1',
+    'SELECT * FROM gebruiker WHERE naam = ? AND actief = 1',
     [naam]
   );
   return rijen[0] ?? null;
@@ -49,7 +49,7 @@ async function haalOpOpNaam(naam) {
  */
 async function haalOpOpExternalId(externalId) {
   const [rijen] = await db.query(
-    'SELECT id, external_id, naam, rol, actief FROM Gebruiker WHERE external_id = ?',
+    'SELECT id, external_id, naam, rol, actief FROM gebruiker WHERE external_id = ?',
     [externalId]
   );
   return rijen[0] ?? null;
@@ -61,7 +61,7 @@ async function haalOpOpExternalId(externalId) {
  * @returns {Promise<number>} Nieuw ID
  */
 async function maakAan(data) {
-  const [resultaat] = await db.query('INSERT INTO Gebruiker SET ?', [data]);
+  const [resultaat] = await db.query('INSERT INTO gebruiker SET ?', [data]);
   return resultaat.insertId;
 }
 
@@ -71,7 +71,7 @@ async function maakAan(data) {
  * @param {object} data
  */
 async function wijzig(id, data) {
-  await db.query('UPDATE Gebruiker SET ? WHERE id = ?', [data, id]);
+  await db.query('UPDATE gebruiker SET ? WHERE id = ?', [data, id]);
 }
 
 /**
@@ -79,7 +79,7 @@ async function wijzig(id, data) {
  * @param {number} id
  */
 async function deactiveer(id) {
-  await db.query('UPDATE Gebruiker SET actief = 0 WHERE id = ?', [id]);
+  await db.query('UPDATE gebruiker SET actief = 0 WHERE id = ?', [id]);
 }
 
 /**

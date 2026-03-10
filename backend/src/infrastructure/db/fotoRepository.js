@@ -12,7 +12,7 @@ const db = require('./verbinding');
  */
 async function slaOp(calamiteitId, bestandsnaam, padUrl, conn = db) {
   const [resultaat] = await conn.query(
-    'INSERT INTO Foto (calamiteit_id, bestandsnaam, pad_url) VALUES (?, ?, ?)',
+    'INSERT INTO foto (calamiteit_id, bestandsnaam, pad_url) VALUES (?, ?, ?)',
     [calamiteitId, bestandsnaam, padUrl]
   );
   return resultaat.insertId;
@@ -25,7 +25,7 @@ async function slaOp(calamiteitId, bestandsnaam, padUrl, conn = db) {
  */
 async function haalOpVoorCalamiteit(calamiteitId) {
   const [rijen] = await db.query(
-    'SELECT * FROM Foto WHERE calamiteit_id = ? ORDER BY aangemaakt_op',
+    'SELECT * FROM foto WHERE calamiteit_id = ? ORDER BY aangemaakt_op',
     [calamiteitId]
   );
   return rijen;
@@ -36,7 +36,7 @@ async function haalOpVoorCalamiteit(calamiteitId) {
  * @param {number} id
  */
 async function verwijder(id) {
-  await db.query('DELETE FROM Foto WHERE id = ?', [id]);
+  await db.query('DELETE FROM foto WHERE id = ?', [id]);
 }
 
 module.exports = { slaOp, haalOpVoorCalamiteit, verwijder };
