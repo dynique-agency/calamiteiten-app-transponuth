@@ -22,9 +22,10 @@
 import { schrijfRecord } from './indexedDB.js';
 
 // ── Configuratie ───────────────────────────────────────────────────────────────
+// Lokaal (dev): lege string — Vite-proxy stuurt /api/* door naar localhost:3001.
+// Productie (Render): volledige backend-URL, zodat fetch de juiste host bereikt.
 const API_BASIS = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}`
-  : ''; // Lege string → dev-server proxy pakt /api/* op
+  || (import.meta.env.PROD ? 'https://calamiteiten-backend.onrender.com' : '');
 
 // localStorage-sleutel voor het JWT-token (zelfde als in AuthContext)
 const TOKEN_SLEUTEL = 'calamapp_jwt';
@@ -90,8 +91,15 @@ async function verwerkAntwoord(antwoord) {
       window.dispatchEvent(new Event('calamapp:uitloggen'));
     }
 
+    // Probeer een leesbare foutmelding samen te stellen:
+    // 1. Enkel foutveld  2. Express-validator array  3. Generieke statusmelding
+    const berichtUitArray = Array.isArray(lichaam?.fouten) && lichaam.fouten.length > 0
+      ? lichaam.fouten.map((f) => f.msg).join(' · ')
+      : null;
+
     const bericht = lichaam?.fout
       || lichaam?.message
+      || berichtUitArray
       || `Serverfout (${antwoord.status} ${antwoord.statusText})`;
 
     throw new APIFout(bericht, antwoord.status, lichaam?.fouten ?? null);

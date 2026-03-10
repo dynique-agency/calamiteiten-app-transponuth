@@ -24,7 +24,20 @@ const POORT = process.env.PORT || 3001;
 
 // ── Beveiliging & parsing ─────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+// Sta zowel de lokale dev-server als de productie-frontend toe
+const toegestaneOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173', // vite preview
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Geen origin (bijv. mobiel app, Postman, curl) altijd toestaan
+    if (!origin || toegestaneOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS geblokkeerd voor origin: ${origin}`));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 

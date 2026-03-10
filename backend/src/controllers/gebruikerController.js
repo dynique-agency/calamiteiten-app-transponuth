@@ -51,7 +51,7 @@ router.post(
     body('naam').trim().notEmpty().withMessage('Naam is verplicht.').isLength({ max: 150 }),
     body('wachtwoord').isLength({ min: 6 }).withMessage('Wachtwoord min. 6 tekens.'),
     body('rol').isIn(['Admin','Medewerker']).withMessage('Rol moet Admin of Medewerker zijn.'),
-    body('external_id').optional().isString(),
+    body('external_id').optional({ nullable: true }).isString(),
   ],
   async (req, res, next) => {
     if (!controleerValidatie(req, res)) return;

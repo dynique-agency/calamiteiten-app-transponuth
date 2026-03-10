@@ -3,13 +3,18 @@
 const mysql  = require('mysql2/promise');
 const logger = require('../logging/logger');
 
+// Lokaal (development): gebruik MAMP socket-pad.
+// Productie (Render → Aiven): gebruik SSL, geen socket.
+const isProd = process.env.NODE_ENV === 'production';
+
 const pool = mysql.createPool({
   host:               process.env.DB_HOST      || 'localhost',
   port:               Number(process.env.DB_PORT) || 8889,
   database:           process.env.DB_NAAM      || 'calamiteiten_db',
   user:               process.env.DB_GEBRUIKER || 'root',
   password:           process.env.DB_WACHTWOORD || 'root',
-  socketPath:         '/Applications/MAMP/tmp/mysql/mysql.sock', // <--- DE MAMP MAC FIX
+  socketPath:         isProd ? undefined : '/Applications/MAMP/tmp/mysql/mysql.sock',
+  ssl:                isProd ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,

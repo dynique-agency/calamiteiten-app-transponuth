@@ -77,20 +77,32 @@ function NieuweGebruikerModal({ onSluit, onGeslaagd }) {
   }
 
   async function opslaan() {
-    if (!formulier.naam.trim())          { setFout('Naam is verplicht.'); return; }
-    if (formulier.wachtwoord.length < 6) { setFout('Wachtwoord minimaal 6 tekens.'); return; }
+    if (!formulier.naam.trim())              { setFout('Naam is verplicht.'); return; }
+    if (formulier.wachtwoord.length < 6)     { setFout('Wachtwoord is minimaal 6 tekens.'); return; }
+    if (!['Admin', 'Medewerker'].includes(formulier.rol)) { setFout('Kies een geldige rol.'); return; }
 
     setIsBezig(true); setFout(null);
     try {
-      await api.post('/api/gebruikers', {
-        naam:        formulier.naam.trim(),
-        wachtwoord:  formulier.wachtwoord,
-        rol:         formulier.rol,
-        external_id: formulier.external_id.trim() || null,
-      });
+      const payload = {
+        naam:       formulier.naam.trim(),
+        wachtwoord: formulier.wachtwoord,
+        rol:        formulier.rol,
+      };
+      // external_id alleen meesturen als het daadwerkelijk is ingevuld;
+      // null sturen faalt de backend isString()-validator.
+      const extId = formulier.external_id.trim();
+      if (extId) payload.external_id = extId;
+
+      await api.post('/api/gebruikers', payload);
       onGeslaagd('Medewerker toegevoegd.');
       onSluit();
-    } catch (err) { setFout(err.message); }
+    } catch (err) {
+      // Toon de specifieke validatiemelding als die beschikbaar is
+      const detail = Array.isArray(err.details) && err.details.length > 0
+        ? err.details.map((d) => d.msg).join(' · ')
+        : null;
+      setFout(detail || err.message);
+    }
     finally { setIsBezig(false); }
   }
 

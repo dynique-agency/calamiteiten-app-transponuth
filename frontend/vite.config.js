@@ -2,8 +2,12 @@ import { defineConfig } from 'vite';
 import react            from '@vitejs/plugin-react';
 import { VitePWA }      from 'vite-plugin-pwa';
 
-// Basis-URL van de backend API (overschrijfbaar via omgevingsvariabele)
-const BACKEND_URL = process.env.VITE_API_URL || 'http://localhost:3001';
+// Basis-URL van de backend API.
+// Lokaal: dev-proxy op localhost:3001. Render-build: productie-URL via env-var.
+const BACKEND_URL = process.env.VITE_API_URL
+  || (process.env.NODE_ENV === 'production'
+    ? 'https://calamiteiten-backend.onrender.com'
+    : 'http://localhost:3001');
 
 export default defineConfig({
   plugins: [

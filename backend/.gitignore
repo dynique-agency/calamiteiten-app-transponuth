@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.aiven
 
 # ── Geüploade bestanden (calamiteitsfoto's — lokale opslag) ───────────────────
 uploads/*
