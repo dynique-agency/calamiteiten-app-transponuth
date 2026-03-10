@@ -22,10 +22,15 @@
 import { schrijfRecord } from './indexedDB.js';
 
 // ── Configuratie ───────────────────────────────────────────────────────────────
-// Lokaal (dev): lege string — Vite-proxy stuurt /api/* door naar localhost:3001.
-// Productie (Render): volledige backend-URL, zodat fetch de juiste host bereikt.
-const API_BASIS = import.meta.env.VITE_API_URL
-  || (import.meta.env.PROD ? 'https://calamiteiten-backend.onrender.com' : '');
+// Eindpunten beginnen altijd met /api/... (bijv. '/api/calamiteiten').
+// API_BASIS bevat ALLEEN de host, ZONDER trailing slash en ZONDER /api,
+// zodat de samenstelling API_BASIS + eindpunt nooit een dubbele slash geeft.
+//
+// Lokaal (dev)  : lege string → Vite-proxy stuurt /api/* door naar localhost:3001.
+// Productie     : volledige Render-host. VITE_API_URL overschrijft indien ingesteld.
+const API_BASIS = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_URL || 'https://calamiteiten-backend.onrender.com').replace(/\/$/, '')
+  : '';
 
 // localStorage-sleutel voor het JWT-token (zelfde als in AuthContext)
 const TOKEN_SLEUTEL = 'calamapp_jwt';

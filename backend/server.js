@@ -24,20 +24,10 @@ const POORT = process.env.PORT || 3001;
 
 // ── Beveiliging & parsing ─────────────────────────────────────────────────────
 app.use(helmet());
-// Sta zowel de lokale dev-server als de productie-frontend toe
-const toegestaneOrigins = [
-  'http://localhost:5173',
-  'http://localhost:4173', // vite preview
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-];
-app.use(cors({
-  origin: (origin, callback) => {
-    // Geen origin (bijv. mobiel app, Postman, curl) altijd toestaan
-    if (!origin || toegestaneOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS geblokkeerd voor origin: ${origin}`));
-  },
-  credentials: true,
-}));
+// origin: true → reflecteert het verzoek-origin terug, waardoor alle domeinen
+// (inclusief Vercel previews en mobiele clients) worden toegestaan.
+// credentials: true is vereist voor het meesturen van Authorization-headers.
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
