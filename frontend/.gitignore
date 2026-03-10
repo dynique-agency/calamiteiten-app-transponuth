@@ -1,0 +1,25 @@
+# ── Afhankelijkheden ──────────────────────────────────────────────────────────
+node_modules/
+
+# ── Build output ──────────────────────────────────────────────────────────────
+dist/
+build/
+
+# ── Vite cache ────────────────────────────────────────────────────────────────
+.vite/
+
+# ── Omgevingsvariabelen ───────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Logbestanden ──────────────────────────────────────────────────────────────
+*.log
+
+# ── Besturingssysteem ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── PWA service worker (gegenereerd bij build) ────────────────────────────────
+public/sw.js
+public/workbox-*.js

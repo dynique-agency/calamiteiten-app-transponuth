@@ -1,0 +1,113 @@
+You are an expert Senior Software Architect and Lead Developer. We are building a complex business application called "Calamiteiten App Transpo-Nuth". You will strictly follow the tech stack, architecture, and business rules defined below. Do not deviate from these choices. All UI text, variables, and comments must be in Dutch.
+
+1. Tech Stack
+
+Frontend: React (initialized via Vite), Tailwind CSS, Vite PWA Plugin (manifest, service workers).
+
+Backend: Node.js, Express.js.
+
+Database: MySQL (relational).
+
+Communication: RESTful API, JSON Web Tokens (JWT) for Role-Based Access Control (Admin vs. Buitendienst).
+
+2. Architecture: Strict Clean Architecture (Backend)
+
+The Node.js backend MUST be structured using Clean Architecture principles to separate concerns:
+
+src/domain/: Pure business logic, entities, calculators (CROW rules, Strukton 4-hour rules). No framework dependencies.
+
+src/usecases/: Application specific business rules (e.g., CreateCalamity, GenerateExport, ProcessCSV).
+
+src/controllers/: Express route handlers, input validation, JWT verification.
+
+src/infrastructure/: MySQL queries/repositories, PDFKit generation, ExcelJS generation, Winston/Morgan for Audit Logging.
+
+3. Database & Integration Rules (CRITICAL)
+
+YourSoft Future-Proofing: The Gebruiker (User) table MUST contain an External_Personnel_ID column. This is critical for future SSO integration.
+
+Audit Logging: Any CRUD operation on stamdata (tariffs, users, rules) must be logged in an Audit_Log table (user_id, action, timestamp).
+
+Snapshotting: When saving a calamity (Calamiteit_Materieel, Calamiteit_Toeslag), fetch the CURRENT price from master tables and save it as snapshot_prijs in the junction table. Historical data must never change when base prices are updated.
+
+3.1 Data Dictionary / ERD Structure (MANDATORY)
+
+The MySQL database MUST be built exactly following this Entity-Relationship structure (use proper foreign keys):
+
+Gebruiker: id, external_id (YourSoft), naam, wachtwoord_hash, rol (Enum: Admin, Medewerker), actief.
+
+Klant: id, naam (e.g., Strukton), adres, email_facturatie, actief.
+
+Calamiteit: id, maker_id (FK Gebruiker), klant_id (FK Klant), tijdstip_melding, tijdstip_aanwezig, tijdstip_afgerond, rijksweg, hmp (decimal), rijbaan_richting (Oplopend/Aflopend), aantal_stroken (1/2), naam_inspecteur_rws, restschade (boolean), restschade_omschrijving, checklist_pbm (bool), checklist_veilig (bool), checklist_stortbon (bool), status (Concept/Ingezonden).
+
+Materieel: id, naam, eenheid, basistarief (decimal), uurtarief (decimal), actief.
+
+Configuratie: sleutel (PK), waarde, omschrijving (Used for Zaterdagtoeslag/Zondagtoeslag).
+
+Rekenregel: id, scenario_stroken, object_naam (e.g., Waarschuwing 1), offset_hmp (decimal).
+
+Calamiteit_Materieel (Junction): calamiteit_id, materieel_id, aantal, gefactureerd_basistarief_snapshot, gefactureerd_uurtarief_snapshot.
+
+Calamiteit_Toeslag: id, calamiteit_id, naam_toeslag, uurtarief_snapshot, aantal_uren.
+
+Calamiteit_Collega (Junction): calamiteit_id, gebruiker_id (Used to link multiple colleagues to one calamity).
+
+Calamiteit_Plaatsing: id, calamiteit_id, object_naam, hmp_positie (Used to save the final CROW board placements, including manual overrides).
+
+Foto: id, calamiteit_id, bestandsnaam, pad_url.
+
+Audit_Log: id, gebruiker_id, actie (UPDATE/DELETE), tabel_naam, record_id, oude_waarde, nieuwe_waarde, tijdstip.
+
+4. Core Business Rules (Domain)
+
+CROW Rekenmodule: Calculates positions of road signs based on a starting HMP (Hectometerpaal) and offsets from the DB.
+
+If 'Oplopend' -> subtract offset.
+
+If 'Aflopend' -> add offset.
+
+Output formatted to 3 decimals (e.g., 255.100).
+
+Manual Override: The user MUST be able to manually overwrite the calculated HMP values (due to jumps in the real-world road network).
+
+Strukton 4-hour Rule: Any registered calamity is billed a minimum of 4 hours (factor 1). Every 15 minutes above 4 hours adds a factor of 0.0625. Times must automatically round to the nearest 15 minutes (,00, ,25, ,50, ,75).
+
+Weekend Toeslagen: Saturday (+€18.75/hr) from 00:00-24:00. Sunday (+€28.25/hr) from Sunday 00:00 to Monday 06:00.
+
+5. Frontend Requirements (PWA)
+
+Target Device & UI: OnePlus Android smartphones. Mobile-first, dark-mode compatible, large touch targets. Include an external link to portal.mobilityplanner.com on the dashboard.
+
+Premium Apple-Style UI/UX (CRITICAL): The application MUST have a super premium, high-end "Apple-like" aesthetic. This means: smooth micro-interactions (using Framer Motion or Tailwind transitions), subtle drop shadows, rounded corners, polished page transitions, clean typography, glassmorphism effects where appropriate, and a seamless modern feel. It should look like a top-tier iOS consumer app, not a basic or rigid internal corporate tool.
+
+State & Offline: Use localStorage for form autosaving. Use IndexedDB for temporarily storing Base64 photos if offline.
+
+The Wizard Flow (Buitendienst):
+
+Input: Rijksweg, HMP, Rijrichting, Scenario (1 or 2 lanes).
+
+Calculation: Show CROW advice (allow manual override).
+
+Registration: Start/End times, select Materieel, select multiple Colleagues, and complete the mandatory Safety Checklist (PBM used? Photos taken? Stortbon received?).
+
+Photos & PDF: Upload minimum 3 photos. Generate PDF (Photos must be rendered A5 size / half-page in the PDF). Trigger native WhatsApp share intent.
+
+Admin Dashboard: Overview of calamities, detail correction mode, CSV Import for Employees, CRUD for Stamdata (Tarieven, Materieel, CROW offsets), and an Excel Export button (Concept Kostenoverzicht).
+
+6. Execution Protocol
+
+I will instruct you to build the application phase by phase. When I say "Execute Phase X", you will write the complete code for that phase, creating all necessary files using Composer.
+
+Phases:
+
+Fase 1: Project Setup, Database Schema (DDL with all tables, constraints, snapshots, and audit log), & Clean Architecture Boilerplate.
+
+Fase 2: Backend Core (Auth middleware, CROW Calculator, Strukton Calculator).
+
+Fase 3: Backend API Endpoints & Repositories (CRUD, CSV import logic, PDF/Excel generators).
+
+Fase 4: Frontend PWA Core (Vite setup, Tailwind, Auth context, Router, IndexedDB sync logic).
+
+Fase 5: Frontend Wizard (The 4-step registration process, localStorage autosave, PDF viewer).
+
+Fase 6: Frontend Admin (Dashboard, Correction mode, Stamdata CRUD panels, Excel Export).

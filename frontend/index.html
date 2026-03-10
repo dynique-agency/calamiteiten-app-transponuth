@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="nl" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA-basismeta -->
+    <meta name="theme-color" content="#0A0F1E" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CalamApp" />
+
+    <!-- SEO / beschrijving -->
+    <meta name="description" content="Calamiteiten registratie-app voor de buitendienst van Transpo-Nuth" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- Favicon -->
+    <link rel="icon"             type="image/png" sizes="32x32" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon"                               href="/icons/icon-192.png" />
+    <link rel="manifest"                                       href="/manifest.webmanifest" />
+
+    <title>Calamiteiten App — Transpo-Nuth</title>
+  </head>
+
+  <body class="bg-app-bg text-slate-100 antialiased">
+    <!--
+      De root-node voor de React-applicatie.
+      De klasse 'dark' op <html> activeert Tailwind darkmode.
+    -->
+    <div id="root"></div>
+
+    <!-- Vite injecteert hier automatisch de gebundelde scripts -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

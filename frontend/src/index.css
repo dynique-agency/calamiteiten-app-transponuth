@@ -1,0 +1,171 @@
+/* =============================================================================
+   Calamiteiten App — Globale Stijlen
+   =============================================================================
+   Volgorde:
+     1. Tailwind-lagen
+     2. CSS-variabelen (design tokens)
+     3. Basisstijlen (reset, typografie, scrollbar)
+     4. Herbruikbare component-klassen
+     5. Animatie-keyframes
+   ============================================================================= */
+
+/* ── 1. Tailwind ─────────────────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── 2. CSS-variabelen ───────────────────────────────────────────────────────── */
+:root {
+  /* Kleuren */
+  --kleur-achtergrond:   #070C18;
+  --kleur-surface:       #0D1526;
+  --kleur-verhoogd:      #131E35;
+  --kleur-accent:        #F97316;
+  --kleur-accent-donker: #EA6B0A;
+  --kleur-merk:          #1A3C6E;
+  --kleur-tekst:         #F1F5F9;
+  --kleur-tekst-zwak:    #94A3B8;
+
+  /* Glas-effect tokens */
+  --glas-bg:     rgba(255,255,255,0.05);
+  --glas-rand:   rgba(255,255,255,0.09);
+  --glas-blur:   20px;
+
+  /* Overgangstijden */
+  --duur-snel:   150ms;
+  --duur-normaal:250ms;
+  --duur-traag:  400ms;
+  --ease-apple:  cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ── 3. Basisstijlen ─────────────────────────────────────────────────────────── */
+
+/* Vloeiend scrollen voor de gehele app */
+html {
+  scroll-behavior: smooth;
+  /* Veilige zone voor notch / statusbalk op moderne Android-toestellen */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica Neue, sans-serif;
+  background-color: var(--kleur-achtergrond);
+  color: var(--kleur-tekst);
+  /* Voorkomt horizontaal scrollen op mobiel */
+  overflow-x: hidden;
+  /* Verbetert de tekstweergave op Retina-schermen */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Toon altijd tap-highlight transparant (iOS) */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Verwijder standaard marges van koppen */
+h1,h2,h3,h4,h5,h6 { margin: 0; }
+
+/* ── Aangepaste scrollbar (desktop Chrome/Edge) ────────────────────────────── */
+::-webkit-scrollbar              { width: 5px; height: 5px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: rgba(255,255,255,0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover  { background: rgba(255,255,255,0.22); }
+
+/* ── 4. Component-klassen ────────────────────────────────────────────────────── */
+
+/* Primaire knop — accent-oranje, volledige breedte op mobiel */
+@layer components {
+  .knop-primair {
+    @apply w-full flex items-center justify-center gap-2
+           min-h-[52px] px-6 py-3
+           bg-accent text-white font-semibold text-base
+           rounded-2xl shadow-accent
+           transition-all duration-250 ease-apple
+           active:scale-[0.97] active:shadow-none
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .knop-secondair {
+    @apply w-full flex items-center justify-center gap-2
+           min-h-[52px] px-6 py-3
+           bg-white/[0.08] border border-white/10 text-slate-200 font-medium text-base
+           rounded-2xl backdrop-blur-sm
+           transition-all duration-250 ease-apple
+           active:scale-[0.97] active:bg-white/[0.12]
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .knop-gevaar {
+    @apply w-full flex items-center justify-center gap-2
+           min-h-[52px] px-6 py-3
+           bg-status-gevaar/20 border border-status-gevaar/40 text-status-gevaar font-semibold
+           rounded-2xl transition-all duration-250
+           active:scale-[0.97] active:bg-status-gevaar/30;
+  }
+
+  /* Invoerveld — iOS-stijl, groot aanraakdoel */
+  .invoerveld {
+    @apply w-full min-h-[52px] px-4 py-3
+           bg-white/5 border border-white/10 text-slate-100
+           text-base rounded-2xl
+           placeholder:text-slate-500
+           focus:outline-none focus:border-accent/60 focus:bg-white/[0.08]
+           transition-all duration-250;
+  }
+
+  .invoerveld-label {
+    @apply block text-sm font-medium text-slate-400 mb-1.5;
+  }
+
+  /* Glassmorphism-kaart */
+  .kaart {
+    @apply glas-kaart rounded-3xl p-5;
+  }
+
+  .kaart-sm {
+    @apply glas-kaart rounded-2xl p-4;
+  }
+
+  /* Sectie-koptekst (h2-niveau) */
+  .sectie-kop {
+    @apply text-2xl font-bold tracking-tight text-slate-100;
+  }
+
+  /* Status-badge */
+  .badge-concept   { @apply inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-500/15 text-yellow-400 text-xs font-semibold rounded-full border border-yellow-500/25; }
+  .badge-ingezonden{ @apply inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/15  text-green-400  text-xs font-semibold rounded-full border border-green-500/25; }
+}
+
+/* ── 5. Animatie-keyframes ───────────────────────────────────────────────────── */
+
+/* Subtiele glans-animatie voor laadstatus */
+@keyframes glinsteren {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200%  center; }
+}
+
+.skelet {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  background-size: 200% auto;
+  animation: glinsteren 1.5s linear infinite;
+  border-radius: 0.75rem;
+}
+
+/* Zachte opkomst voor pagina's en modals */
+@keyframes opkomen {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.opkomen {
+  animation: opkomen 0.3s var(--ease-apple) forwards;
+}
+
+/* ── Framer Motion helpers ──────────────────────────────────────────────────── */
+/* Zorgt dat AnimatePresence-containers de hoogte correct afhandelen */
+.pagina-wrapper {
+  width: 100%;
+  min-height: 100%;
+}

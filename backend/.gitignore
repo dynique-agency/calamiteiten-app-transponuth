@@ -1,0 +1,27 @@
+# ── Afhankelijkheden ──────────────────────────────────────────────────────────
+node_modules/
+
+# ── Omgevingsvariabelen (bevat wachtwoorden en geheimen) ──────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Geüploade bestanden (calamiteitsfoto's — lokale opslag) ───────────────────
+uploads/*
+!uploads/.gitkeep
+
+# ── Logbestanden ──────────────────────────────────────────────────────────────
+logs/*
+!logs/.gitkeep
+*.log
+
+# ── Besturingssysteem ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Tijdelijke hulpscripts ────────────────────────────────────────────────────
+resetDatabase.js
+
+# ── Build output ──────────────────────────────────────────────────────────────
+dist/
+build/
