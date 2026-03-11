@@ -23,6 +23,7 @@ Thumbs.db
 # ── Tijdelijke hulpscripts (bevatten credentials, nooit committen) ────────────
 resetDatabase.js
 seedAiven.js
+updateAivenSchema.js
 initAiven.js
 seedAivenGebruikers.js
 

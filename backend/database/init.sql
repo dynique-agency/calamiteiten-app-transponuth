@@ -84,6 +84,8 @@ CREATE TABLE `calamiteit` (
   `rijbaan_richting`          ENUM('Oplopend','Aflopend') NOT NULL,
   `aantal_stroken`            TINYINT UNSIGNED NOT NULL DEFAULT 1,
   `naam_inspecteur_rws`       VARCHAR(150)    NULL      DEFAULT NULL,
+  `tijd_aangemeld_vc`         VARCHAR(5)      NULL      DEFAULT NULL,
+  `opmerkingen`               TEXT            NULL,
   `restschade`                TINYINT(1)      NOT NULL DEFAULT 0,
   `restschade_omschrijving`   TEXT            NULL      DEFAULT NULL,
   `vervolgactie`              TINYINT(1)      NOT NULL DEFAULT 0,

@@ -88,6 +88,7 @@ async function genereerCalamiteitPDF(calamiteit, opties = {}) {
       _tekenKoptekst(doc, cal);
       _tekenCalamiteitGegevens(doc, cal);
       _tekenOmschrijving(doc, cal);
+      _tekenOpmerkingen(doc, cal);
       _tekenCROWPlaatsingen(doc, cal.plaatsingen);
       _tekenMaterieel(doc, cal);
       _tekenRestschadeEnVervolgactie(doc, cal);
@@ -152,6 +153,7 @@ function _tekenCalamiteitGegevens(doc, cal) {
     ['Melding',        _formatteerDatum(cal.tijdstip_melding)],
     ['Aanwezig',       _formatteerDatum(cal.tijdstip_aanwezig)],
     ['Afgerond',       _formatteerDatum(cal.tijdstip_afgerond)],
+    ['Aangemeld VC',   cal.tijd_aangemeld_vc || '—'],
     ['Inspecteur RWS', cal.naam_inspecteur_rws || '—'],
     ['Medewerker',     cal.maker_naam || (cal.maker_id ? String(cal.maker_id) : '—')],
     ['Collega\'s',     (Array.isArray(cal.collegas) ? cal.collegas : [])
@@ -187,6 +189,28 @@ function _tekenOmschrijving(doc, cal) {
      });
 
   // Onderste rand
+  doc.moveDown(0.4);
+  doc.rect(MARGE, doc.y, INHOUD_B, 1).fill(KLEUR_PRIMAIR);
+  doc.moveDown(0.3);
+}
+
+// ── Opmerkingen / Afwijkingen ─────────────────────────────────────────────────
+
+function _tekenOpmerkingen(doc, cal) {
+  if (!cal.opmerkingen) return;
+
+  _controleerPaginaEinde(doc, 60);
+  _sectionHeader(doc, 'OPMERKINGEN / AFWIJKINGEN');
+
+  const startY = doc.y;
+  doc.rect(MARGE, startY, INHOUD_B, 8).fill('#FFF8E1'); // lichtgele achtergrond
+
+  doc.fillColor(KLEUR_TEKST).font('Helvetica').fontSize(9)
+     .text(cal.opmerkingen, MARGE + 8, startY + 6, {
+       width:   INHOUD_B - 16,
+       lineGap: 2,
+     });
+
   doc.moveDown(0.4);
   doc.rect(MARGE, doc.y, INHOUD_B, 1).fill(KLEUR_PRIMAIR);
   doc.moveDown(0.3);

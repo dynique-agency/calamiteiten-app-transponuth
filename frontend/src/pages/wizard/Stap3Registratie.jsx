@@ -359,6 +359,16 @@ export default function Stap3Registratie({ formData, bijwerken, fouten, huidigeG
           />
         </VeldGroep>
 
+        <VeldGroep label="Tijd aangemeld bij verkeerscentrale (VC)">
+          <input
+            type="time"
+            value={formData.tijdAangemeldVc}
+            onChange={(e) => bijwerken('tijdAangemeldVc', e.target.value)}
+            className="invoerveld"
+            placeholder="HH:mm"
+          />
+        </VeldGroep>
+
         {/* Toon berekende duur als beide tijden zijn ingevuld */}
         <AnimatePresence>
           {formData.tijdstipAanwezig && formData.tijdstipAfgerond && (
@@ -574,6 +584,19 @@ export default function Stap3Registratie({ formData, bijwerken, fouten, huidigeG
             <FoutTekst bericht={fout} />
           </div>
         ))}
+      </WizardSectie>
+
+      {/* ── Sectie 7: Opmerkingen / Afwijkingen ──────────────────────── */}
+      <WizardSectie titel="📝 Opmerkingen / Afwijkingen">
+        <VeldGroep label="Opmerkingen of afwijkingen van de standaard werkwijze">
+          <textarea
+            rows={4}
+            value={formData.opmerkingen}
+            onChange={(e) => bijwerken('opmerkingen', e.target.value)}
+            placeholder="Bijv. afwijkende situatie, extra maatregelen, bijzonderheden…"
+            className="invoerveld resize-none"
+          />
+        </VeldGroep>
       </WizardSectie>
     </div>
   );
