@@ -284,7 +284,7 @@ export default function Stap4Fotos({ formData, bijwerken, fouten, isVerzenden })
           {[
             { label: 'Rijksweg',    waarde: formData.rijksweg || '—' },
             { label: 'HMP',         waarde: formData.hmp      || '—' },
-            { label: 'Rijrichting', waarde: formData.rijrichting },
+            { label: 'Rijrichting', waarde: formData.rijrichting === 'Oplopend' ? '→ Rechts (Oplopend)' : formData.rijrichting === 'Aflopend' ? '← Links (Aflopend)' : formData.rijrichting || '—' },
             { label: 'Foto\'s',     waarde: `${aantalFotos} stuks` },
             {
               label: 'Checklist',

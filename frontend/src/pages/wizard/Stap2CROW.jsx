@@ -307,6 +307,63 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
           </motion.div>
         )}
 
+        {/* ── Navigatieknop naar startpunt afzetting ──────────────── */}
+        {!isLadend && heeftResultaten && (() => {
+          // Zoek de meest negatieve HMP-offset (= vroegste waarschuwing / verste bord)
+          const posities   = resultaten.map((r) => parseFloat(lokaleOverrides[r.object_naam] ?? r.hmp_positie));
+          const richting   = formData.rijrichting;
+          const hmpBasis   = parseFloat(String(formData.hmp).replace(',', '.'));
+
+          // Bij Oplopend liggen vroege borden op lagere HMP → meest negatieve offset = kleinste positie
+          // Bij Aflopend liggen vroege borden op hogere HMP → grootste positie
+          let startHmp;
+          if (richting === 'Oplopend') {
+            startHmp = Math.min(...posities);
+          } else {
+            startHmp = Math.max(...posities);
+          }
+
+          if (isNaN(startHmp) || isNaN(hmpBasis)) return null;
+
+          const startHmpLabel = startHmp.toFixed(3);
+
+          function navigeer() {
+            const zoekterm = `${formData.rijksweg} hectometerpaal ${startHmpLabel}`;
+            window.open(
+              `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(zoekterm)}`,
+              '_blank'
+            );
+          }
+
+          return (
+            <motion.div
+              key="navigatie"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col gap-2"
+            >
+              <motion.button
+                type="button"
+                onClick={navigeer}
+                whileTap={{ scale: 0.97 }}
+                className="w-full flex items-center justify-center gap-3 min-h-[56px] px-5 py-3
+                           rounded-2xl font-bold text-white text-base"
+                style={{
+                  background:  'linear-gradient(135deg, #1D4ED8, #2563EB)',
+                  boxShadow:   '0 4px 20px rgba(37,99,235,0.45)',
+                }}
+              >
+                <span className="text-xl">📍</span>
+                Navigeer naar startpunt afzetting (HMP {startHmpLabel})
+              </motion.button>
+              <p className="text-slate-500 text-xs text-center leading-relaxed px-2">
+                Berekend op basis van het verste bord — dit is het punt waar u begint
+                met het plaatsen van de afzetting.
+              </p>
+            </motion.div>
+          );
+        })()}
+
         {/* Validatiefout */}
         {fouten.crowResultaten && (
           <FoutTekst bericht={fouten.crowResultaten} />

@@ -12,8 +12,8 @@ import { motion } from 'framer-motion';
 import { SegmentedControl, VeldGroep, WizardSectie } from './wizardUi.jsx';
 
 const RICHTING_OPTIES = [
-  { waarde: 'Oplopend', label: '↑ Oplopend' },
-  { waarde: 'Aflopend', label: '↓ Aflopend' },
+  { waarde: 'Oplopend', label: '→ Rechts (Oplopend)' },
+  { waarde: 'Aflopend', label: '← Links (Aflopend)' },
 ];
 
 const STROKEN_OPTIES = [
@@ -94,9 +94,9 @@ export default function Stap1Locatie({ formData, bijwerken, fouten }) {
         <div className="flex items-start gap-3 p-3 bg-merk/10 border border-merk/20 rounded-2xl">
           <span className="text-xl mt-0.5">ℹ️</span>
           <p className="text-slate-400 text-xs leading-relaxed">
-            <strong className="text-slate-300">Oplopend:</strong> HMP-waarden nemen toe in rijrichting (CROW-posities worden afgetrokken).
+            <strong className="text-slate-300">→ Rechts (Oplopend):</strong> rijdt u in de richting van hogere HMP-waarden (CROW-posities worden afgetrokken).
             <br />
-            <strong className="text-slate-300">Aflopend:</strong> HMP-waarden nemen af in rijrichting (CROW-posities worden opgeteld).
+            <strong className="text-slate-300">← Links (Aflopend):</strong> rijdt u in de richting van lagere HMP-waarden (CROW-posities worden opgeteld).
           </p>
         </div>
       </WizardSectie>

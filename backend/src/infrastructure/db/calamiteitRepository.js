@@ -43,7 +43,7 @@ async function haalAlleOp({ status, klantId, makerId, rijksweg, startDatum, eind
       g.naam  AS maker_naam
     FROM calamiteit c
     LEFT JOIN klant     k ON k.id = c.klant_id
-    JOIN      Gebruiker g ON g.id = c.maker_id
+    JOIN      gebruiker g ON g.id = c.maker_id
     WHERE 1=1
   `;
   const params = [];
@@ -74,7 +74,7 @@ async function haalVolledigOpId(id) {
     `SELECT c.*, k.naam AS klant_naam, g.naam AS maker_naam
      FROM calamiteit c
      LEFT JOIN klant     k ON k.id = c.klant_id
-     JOIN      Gebruiker g ON g.id = c.maker_id
+     JOIN      gebruiker g ON g.id = c.maker_id
      WHERE c.id = ?`,
     [id]
   );
