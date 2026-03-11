@@ -52,39 +52,11 @@ function formateerHMP(waarde) {
  *   fouten: object
  * }} props
  */
-/**
- * Vraagt GPS-coördinaten op via de PDOK Locatieserver van Rijkswaterstaat.
- * Zoekt op hectometerpaal-type met weg, hmp en zijde (Re = rechts/oplopend, Li = links/aflopend).
- *
- * @param {string} weg       - Bijv. 'A2' of 'N325'
- * @param {string} hmpWaarde - Bijv. '254.500'
- * @param {string} richting  - 'Oplopend' of 'Aflopend'
- * @returns {Promise<{lat: number, lng: number}>}
- */
-async function haalCoordinatenOp(weg, hmpWaarde, richting) {
-  const zijde = richting === 'Oplopend' ? 'Re' : 'Li';
-  const q     = encodeURIComponent(`${weg} ${hmpWaarde} ${zijde}`);
-  const url   = `https://geodata.nationaalgeoregister.nl/locatieserver/v3/free?fq=type:hectometerpaal&q=${q}&rows=1`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`PDOK niet bereikbaar (${res.status})`);
-
-  const data = await res.json();
-  const punt = data.response?.docs?.[0]?.centroide_ll;
-  if (!punt) throw new Error('Geen hectometerpaal gevonden voor dit wegvak en HMP.');
-
-  // "POINT(4.123456 52.123456)" → { lng, lat }
-  const match = punt.match(/POINT\(([^\s]+)\s+([^)]+)\)/);
-  if (!match) throw new Error('Onverwacht coördinaat-formaat van PDOK.');
-
-  return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
-}
-
 export default function Stap2CROW({ formData, bijwerken, fouten }) {
   const [isLadend,       setIsLadend]       = useState(false);
   const [apiFout,        setApiFout]        = useState(null);
   const [overschrijving, setOverschrijving] = useState(false);
-  const [navBerekenen,   setNavBerekenen]   = useState(false);
+  const [ladenPDOK,      setLadenPDOK]      = useState(false);
 
   // Lokale kopie van overrides voor direct bewerken
   const [lokaleOverrides, setLokaleOverrides] = useState(
@@ -350,30 +322,48 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
           const richting   = formData.rijrichting;
           const startHmp   = richting === 'Oplopend' ? Math.min(...posities) : Math.max(...posities);
           const startHmpLabel = startHmp.toFixed(3);
-          // PDOK gebruikt 1 decimaal voor hectometerpalen (bijv. "A2 254.5 Re")
-          const pdokHmp    = startHmp.toFixed(1);
 
           async function navigeerViaPDOK() {
-            setNavBerekenen(true);
+            setLadenPDOK(true);
             try {
-              // Stap B: exacte GPS via PDOK Locatieserver RWS
-              const { lat, lng } = await haalCoordinatenOp(
-                formData.rijksweg, pdokHmp, richting
-              );
-              // Stap C: open Google Maps routebeschrijving naar GPS-punt
+              // HMP formatteren zoals PDOK verwacht: punt→komma (bijv. 254.5 → 254,5)
+              const pdokHmpFormatted = parseFloat(startHmp).toFixed(1).replace('.', ',');
+              const zijde            = richting === 'Oplopend' ? 'Re' : 'Li';
+              const basisUrl         = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?fq=type:hectometerpaal&rows=1';
+
+              // Eerste poging: exact op weg + hmp + zijde
+              let res  = await fetch(`${basisUrl}&q=${encodeURIComponent(`${formData.rijksweg} ${pdokHmpFormatted} ${zijde}`)}`);
+              let data = await res.json();
+
+              // Tweede poging (fallback): alleen weg + hmp zonder zijde
+              if (!data?.response?.docs?.length) {
+                res  = await fetch(`${basisUrl}&q=${encodeURIComponent(`${formData.rijksweg} ${pdokHmpFormatted}`)}`);
+                data = await res.json();
+              }
+
+              if (data?.response?.docs?.length) {
+                const punt  = data.response.docs[0].centroide_ll; // "POINT(4.967 52.251)"
+                const match = punt.match(/POINT\(([\d.]+)\s([\d.]+)\)/);
+                if (match) {
+                  const lng = match[1];
+                  const lat = match[2];
+                  window.open(
+                    `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+                    '_blank'
+                  );
+                  return;
+                }
+              }
+              throw new Error('Geen coördinaten gevonden in PDOK');
+            } catch (err) {
+              // Fallback: Google Maps tekst-zoekopdracht
+              console.error('PDOK navigatie fout:', err);
               window.open(
-                `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
-                '_blank'
-              );
-            } catch {
-              // Fallback: tekst-zoekopdracht als PDOK niet beschikbaar is
-              const zoekterm = `${formData.rijksweg} hectometerpaal ${startHmpLabel}`;
-              window.open(
-                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(zoekterm)}`,
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${formData.rijksweg} hectometerpaal ${startHmpLabel}`)}`,
                 '_blank'
               );
             } finally {
-              setNavBerekenen(false);
+              setLadenPDOK(false);
             }
           }
 
@@ -387,8 +377,8 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
               <motion.button
                 type="button"
                 onClick={navigeerViaPDOK}
-                disabled={navBerekenen}
-                whileTap={{ scale: navBerekenen ? 1 : 0.97 }}
+                disabled={ladenPDOK}
+                whileTap={{ scale: ladenPDOK ? 1 : 0.97 }}
                 className="w-full flex items-center justify-center gap-3 min-h-[56px] px-5 py-3
                            rounded-2xl font-bold text-white text-base disabled:opacity-70"
                 style={{
@@ -396,7 +386,7 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
                   boxShadow:  '0 4px 20px rgba(22,163,74,0.4)',
                 }}
               >
-                {navBerekenen ? (
+                {ladenPDOK ? (
                   <>
                     <motion.span
                       animate={{ rotate: 360 }}
