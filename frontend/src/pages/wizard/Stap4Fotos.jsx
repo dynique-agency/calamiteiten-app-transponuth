@@ -285,6 +285,15 @@ export default function Stap4Fotos({ formData, bijwerken, fouten, isVerzenden })
             { label: 'Rijksweg',    waarde: formData.rijksweg || '—' },
             { label: 'HMP',         waarde: formData.hmp      || '—' },
             { label: 'Rijrichting', waarde: formData.rijrichting === 'Oplopend' ? 'Rechts (Oplopend)' : formData.rijrichting === 'Aflopend' ? 'Links (Aflopend)' : formData.rijrichting || '—' },
+            {
+              label: 'Aangemeld VC',
+              waarde: formData.tijdAangemeldVc
+                ? new Date(formData.tijdAangemeldVc).toLocaleString('nl-NL', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                  })
+                : '—',
+            },
             { label: 'Foto\'s',     waarde: `${aantalFotos} stuks` },
             {
               label: 'Checklist',
@@ -293,6 +302,10 @@ export default function Stap4Fotos({ formData, bijwerken, fouten, isVerzenden })
                 formData.checklistVeilig  !== null && (formData.checklistVeilig  ? '🔒 Veilig ✓' : '🔒 Veilig ✗'),
                 formData.checklistStortbon!== null && (formData.checklistStortbon? '🧾 Stortbon ✓' : '🧾 Stortbon ✗'),
               ].filter(Boolean).join('  ') || '—',
+            },
+            {
+              label: 'Opmerkingen',
+              waarde: formData.opmerkingen || '—',
             },
           ].map(({ label, waarde }) => (
             <div key={label} className="flex justify-between items-center py-1.5 border-b border-white/4 last:border-0">

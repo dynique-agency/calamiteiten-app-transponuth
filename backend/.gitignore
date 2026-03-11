@@ -24,6 +24,7 @@ Thumbs.db
 resetDatabase.js
 seedAiven.js
 updateAivenSchema.js
+updateAivenSchema2.js
 initAiven.js
 seedAivenGebruikers.js
 

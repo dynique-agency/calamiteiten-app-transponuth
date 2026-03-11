@@ -50,8 +50,12 @@ class WijzigCalamiteit {
     const toegestaneVelden = [
       'klant_id', 'tijdstip_melding', 'tijdstip_aanwezig', 'tijdstip_afgerond',
       'rijksweg', 'hmp', 'rijbaan_richting', 'aantal_stroken',
-      'naam_inspecteur_rws', 'restschade', 'restschade_omschrijving',
-      'checklist_pbm', 'checklist_veilig', 'checklist_stortbon', 'status',
+      'naam_inspecteur_rws', 'tijd_aangemeld_vc',
+      'omschrijving', 'opmerkingen',
+      'restschade', 'restschade_omschrijving',
+      'vervolgactie', 'vervolgactie_omschrijving',
+      'checklist_pbm', 'checklist_fotos_calamiteit', 'checklist_fotos_aanpak',
+      'checklist_veilig', 'checklist_stortbon', 'status',
     ];
     const gefilterdeWijzigingen = Object.fromEntries(
       Object.entries(wijzigingen).filter(([k]) => toegestaneVelden.includes(k))
@@ -140,10 +144,14 @@ class WijzigCalamiteit {
     await withTransactie(async (conn) => {
       // Basis-velden bijwerken
       const basisWijzigingen = {};
-      for (const veld of ['klant_id','tijdstip_melding','tijdstip_aanwezig','tijdstip_afgerond',
-                           'rijksweg','hmp','rijbaan_richting','aantal_stroken','naam_inspecteur_rws',
-                           'restschade','restschade_omschrijving','checklist_pbm','checklist_veilig',
-                           'checklist_stortbon','status']) {
+      for (const veld of [
+        'klant_id','tijdstip_melding','tijdstip_aanwezig','tijdstip_afgerond',
+        'rijksweg','hmp','rijbaan_richting','aantal_stroken','naam_inspecteur_rws','tijd_aangemeld_vc',
+        'omschrijving','opmerkingen',
+        'restschade','restschade_omschrijving','vervolgactie','vervolgactie_omschrijving',
+        'checklist_pbm','checklist_fotos_calamiteit','checklist_fotos_aanpak',
+        'checklist_veilig','checklist_stortbon','status',
+      ]) {
         if (invoer[veld] !== undefined) basisWijzigingen[veld] = invoer[veld];
       }
       if (Object.keys(basisWijzigingen).length > 0) {

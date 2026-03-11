@@ -12,7 +12,7 @@
  *   - Ingezet materieel (zonder prijskolommen — alleen naam, eenheid, aantal)
  *   - Restschade & Vervolgactie
  *   - Veiligheidschecklist (compact, visuele checkboxjes)
- *   - Handtekening inspecteur RWS
+ *   - Opmerkingen / Afwijkingen sectie
  *   - Foto-pagina's (A5-formaat: 2 per pagina)
  *
  * Foto-formaat (business rules sectie 5):
@@ -153,7 +153,7 @@ function _tekenCalamiteitGegevens(doc, cal) {
     ['Melding',        _formatteerDatum(cal.tijdstip_melding)],
     ['Aanwezig',       _formatteerDatum(cal.tijdstip_aanwezig)],
     ['Afgerond',       _formatteerDatum(cal.tijdstip_afgerond)],
-    ['Aangemeld VC',   cal.tijd_aangemeld_vc || '—'],
+    ['Aangemeld VC',   _formatteerDatum(cal.tijd_aangemeld_vc)],
     ['Inspecteur RWS', cal.naam_inspecteur_rws || '—'],
     ['Medewerker',     cal.maker_naam || (cal.maker_id ? String(cal.maker_id) : '—')],
     ['Collega\'s',     (Array.isArray(cal.collegas) ? cal.collegas : [])
@@ -425,17 +425,7 @@ function _tekenVeiligheidschecklist(doc, cal) {
     doc.y = rijY + RIJ_H;
   });
 
-  // Handtekeningveld
-  doc.moveDown(0.8);
-  doc.font('Helvetica').fontSize(8).fillColor(KLEUR_GRIJS)
-     .text('Handtekening inspecteur RWS:', MARGE, doc.y);
-  doc.moveDown(0.3);
-  doc.rect(MARGE, doc.y, 200, 40).stroke(KLEUR_GRIJS);
-  if (cal.naam_inspecteur_rws) {
-    doc.fillColor(KLEUR_TEKST).font('Helvetica').fontSize(8)
-       .text(cal.naam_inspecteur_rws, MARGE + 5, doc.y + 22, { width: 190 });
-  }
-  doc.moveDown(0.5);
+  doc.moveDown(0.4);
 }
 
 // ── Foto's (A5, 2 per pagina) ─────────────────────────────────────────────────

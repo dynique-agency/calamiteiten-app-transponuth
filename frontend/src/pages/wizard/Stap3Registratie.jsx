@@ -359,13 +359,12 @@ export default function Stap3Registratie({ formData, bijwerken, fouten, huidigeG
           />
         </VeldGroep>
 
-        <VeldGroep label="Tijd aangemeld bij verkeerscentrale (VC)">
+        <VeldGroep label="Tijdstip aangemeld bij verkeerscentrale (VC)">
           <input
-            type="time"
+            type="datetime-local"
             value={formData.tijdAangemeldVc}
             onChange={(e) => bijwerken('tijdAangemeldVc', e.target.value)}
             className="invoerveld"
-            placeholder="HH:mm"
           />
         </VeldGroep>
 
