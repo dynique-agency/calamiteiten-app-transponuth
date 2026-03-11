@@ -49,7 +49,7 @@ router.post('/', vereistAdmin,
         volgorde:         req.body.volgorde ?? 0,
       });
       await schrijfAuditLog({
-        gebruikerId, actie: 'INSERT', tabelNaam: 'Rekenregel',
+        gebruikerId, actie: 'INSERT', tabelNaam: 'rekenregel',
         recordId: nieuwId, oudeWaarde: null, nieuweWaarde: req.body,
       });
       res.status(201).json({ succes: true, id: nieuwId });
@@ -71,7 +71,7 @@ router.patch('/:id', vereistAdmin,
       const id          = Number(req.params.id);
       const gebruikerId = haalGebruikerIdOp(req);
       const [regels]    = await require('../infrastructure/db/verbinding').query(
-        'SELECT * FROM Rekenregel WHERE id = ?', [id]
+        'SELECT * FROM rekenregel WHERE id = ?', [id]
       );
       const bestaand    = regels[0];
       if (!bestaand) return res.status(404).json({ succes: false, fout: 'Rekenregel niet gevonden.' });
@@ -83,7 +83,7 @@ router.patch('/:id', vereistAdmin,
 
       await rekenregelRepo.wijzig(id, wijzigingen);
       await schrijfAuditLog({
-        gebruikerId, actie: 'UPDATE', tabelNaam: 'Rekenregel',
+        gebruikerId, actie: 'UPDATE', tabelNaam: 'rekenregel',
         recordId: id, oudeWaarde: bestaand, nieuweWaarde: wijzigingen,
       });
       res.json({ succes: true, bericht: 'Rekenregel bijgewerkt.' });
@@ -98,14 +98,14 @@ router.delete('/:id', vereistAdmin, [param('id').isInt({ min: 1 })], async (req,
     const id          = Number(req.params.id);
     const gebruikerId = haalGebruikerIdOp(req);
     const [regels]    = await require('../infrastructure/db/verbinding').query(
-      'SELECT * FROM Rekenregel WHERE id = ?', [id]
+      'SELECT * FROM rekenregel WHERE id = ?', [id]
     );
     const bestaand    = regels[0];
     if (!bestaand) return res.status(404).json({ succes: false, fout: 'Rekenregel niet gevonden.' });
 
     await rekenregelRepo.verwijder(id);
     await schrijfAuditLog({
-      gebruikerId, actie: 'DELETE', tabelNaam: 'Rekenregel',
+      gebruikerId, actie: 'DELETE', tabelNaam: 'rekenregel',
       recordId: id, oudeWaarde: bestaand, nieuweWaarde: null,
     });
     res.json({ succes: true, bericht: 'Rekenregel verwijderd.' });

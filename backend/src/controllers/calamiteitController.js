@@ -229,7 +229,7 @@ router.patch(
 
       await calamiteitRepo.wijzig(Number(req.params.id), { status: req.body.status });
       await schrijfAuditLog({
-        gebruikerId, actie: 'UPDATE', tabelNaam: 'Calamiteit',
+        gebruikerId, actie: 'UPDATE', tabelNaam: 'calamiteit',
         recordId: req.params.id,
         oudeWaarde:  { status: calamiteit.status },
         nieuweWaarde: { status: req.body.status },

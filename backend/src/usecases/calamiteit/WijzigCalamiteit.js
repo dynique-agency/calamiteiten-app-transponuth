@@ -66,7 +66,7 @@ class WijzigCalamiteit {
     await this.auditLogger.schrijfAuditLog({
       gebruikerId,
       actie:       'UPDATE',
-      tabelNaam:   'Calamiteit',
+      tabelNaam:   'calamiteit',
       recordId:    id,
       oudeWaarde:  bestaand,
       nieuweWaarde: gefilterdeWijzigingen,
@@ -178,7 +178,7 @@ class WijzigCalamiteit {
     await this.auditLogger.schrijfAuditLog({
       gebruikerId,
       actie:       'UPDATE',
-      tabelNaam:   'Calamiteit',
+      tabelNaam:   'calamiteit',
       recordId:    id,
       oudeWaarde:  bestaand,
       nieuweWaarde: { ...invoer, herberekend: true },

@@ -203,7 +203,7 @@ class MaakCalamiteit {
     await this.auditLogger.schrijfAuditLog({
       gebruikerId,
       actie:       'INSERT',
-      tabelNaam:   'Calamiteit',
+      tabelNaam:   'calamiteit',
       recordId:    calamiteitId,
       oudeWaarde:  null,
       nieuweWaarde: { calamiteitId, rijksweg: calamiteit.rijksweg, hmp: calamiteit.hmp },

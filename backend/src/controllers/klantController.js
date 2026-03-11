@@ -50,7 +50,7 @@ router.post('/', vereistAdmin,
         actief:           1,
       });
       await schrijfAuditLog({
-        gebruikerId, actie: 'INSERT', tabelNaam: 'Klant',
+        gebruikerId, actie: 'INSERT', tabelNaam: 'klant',
         recordId: nieuwId, oudeWaarde: null, nieuweWaarde: req.body,
       });
       res.status(201).json({ succes: true, id: nieuwId });
@@ -74,7 +74,7 @@ router.patch('/:id', vereistAdmin, [param('id').isInt({ min: 1 })], async (req, 
 
     await klantRepo.wijzig(id, wijzigingen);
     await schrijfAuditLog({
-      gebruikerId, actie: 'UPDATE', tabelNaam: 'Klant',
+      gebruikerId, actie: 'UPDATE', tabelNaam: 'klant',
       recordId: id, oudeWaarde: bestaand, nieuweWaarde: wijzigingen,
     });
     res.json({ succes: true, bericht: 'Klant bijgewerkt.' });

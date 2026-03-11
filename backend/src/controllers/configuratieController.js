@@ -51,7 +51,7 @@ router.put(
       await schrijfAuditLog({
         gebruikerId,
         actie:       bestaand ? 'UPDATE' : 'INSERT',
-        tabelNaam:   'Configuratie',
+        tabelNaam:   'configuratie',
         recordId:    sleutel,
         oudeWaarde:  bestaand ? { waarde: bestaand.waarde } : null,
         nieuweWaarde: { waarde: req.body.waarde },

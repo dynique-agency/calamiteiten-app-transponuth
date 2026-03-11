@@ -118,7 +118,7 @@ class ImporteerMedewerkersCSV {
     await this.auditLogger.schrijfAuditLog({
       gebruikerId,
       actie:       uitvoerResultaat.actie === 'aangemaakt' ? 'INSERT' : 'UPDATE',
-      tabelNaam:   'Gebruiker',
+      tabelNaam:   'gebruiker',
       recordId:    uitvoerResultaat.id,
       oudeWaarde:  null,
       nieuweWaarde: { external_id: externalId, naam, rol },

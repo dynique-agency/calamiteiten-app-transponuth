@@ -54,7 +54,7 @@ router.post('/', vereistAdmin,
         actief:     1,
       });
       await schrijfAuditLog({
-        gebruikerId, actie: 'INSERT', tabelNaam: 'Materieel',
+        gebruikerId, actie: 'INSERT', tabelNaam: 'materieel',
         recordId: nieuwId, oudeWaarde: null, nieuweWaarde: req.body,
       });
       res.status(201).json({ succes: true, id: nieuwId });
@@ -84,7 +84,7 @@ router.patch('/:id', vereistAdmin,
 
       await materieelRepo.wijzig(id, wijzigingen);
       await schrijfAuditLog({
-        gebruikerId, actie: 'UPDATE', tabelNaam: 'Materieel',
+        gebruikerId, actie: 'UPDATE', tabelNaam: 'materieel',
         recordId: id, oudeWaarde: bestaand, nieuweWaarde: wijzigingen,
       });
       res.json({ succes: true, bericht: 'Materieel bijgewerkt.' });
@@ -103,7 +103,7 @@ router.delete('/:id', vereistAdmin, [param('id').isInt({ min: 1 })], async (req,
 
     await materieelRepo.deactiveer(id);
     await schrijfAuditLog({
-      gebruikerId, actie: 'DELETE', tabelNaam: 'Materieel',
+      gebruikerId, actie: 'DELETE', tabelNaam: 'materieel',
       recordId: id, oudeWaarde: bestaand, nieuweWaarde: { actief: 0 },
     });
     res.json({ succes: true, bericht: 'Materieel gedeactiveerd.' });

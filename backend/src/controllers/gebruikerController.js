@@ -66,7 +66,7 @@ router.post(
         actief:          1,
       });
       await schrijfAuditLog({
-        gebruikerId, actie: 'INSERT', tabelNaam: 'Gebruiker',
+        gebruikerId, actie: 'INSERT', tabelNaam: 'gebruiker',
         recordId: nieuwId, oudeWaarde: null,
         nieuweWaarde: { naam: req.body.naam, rol: req.body.rol },
       });
@@ -104,7 +104,7 @@ router.patch(
 
       await gebruikerRepo.wijzig(id, wijzigingen);
       await schrijfAuditLog({
-        gebruikerId, actie: 'UPDATE', tabelNaam: 'Gebruiker',
+        gebruikerId, actie: 'UPDATE', tabelNaam: 'gebruiker',
         recordId: id, oudeWaarde: bestaand, nieuweWaarde: wijzigingen,
       });
       res.json({ succes: true, bericht: 'Gebruiker bijgewerkt.' });
@@ -123,7 +123,7 @@ router.delete('/:id', vereistAdmin, [param('id').isInt({ min: 1 })], async (req,
 
     await gebruikerRepo.deactiveer(id);
     await schrijfAuditLog({
-      gebruikerId, actie: 'DELETE', tabelNaam: 'Gebruiker',
+      gebruikerId, actie: 'DELETE', tabelNaam: 'gebruiker',
       recordId: id, oudeWaarde: bestaand, nieuweWaarde: { actief: 0 },
     });
     res.json({ succes: true, bericht: 'Gebruiker gedeactiveerd.' });
