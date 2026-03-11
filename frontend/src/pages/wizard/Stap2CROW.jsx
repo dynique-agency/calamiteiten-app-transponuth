@@ -52,10 +52,39 @@ function formateerHMP(waarde) {
  *   fouten: object
  * }} props
  */
+/**
+ * Vraagt GPS-coördinaten op via de PDOK Locatieserver van Rijkswaterstaat.
+ * Zoekt op hectometerpaal-type met weg, hmp en zijde (Re = rechts/oplopend, Li = links/aflopend).
+ *
+ * @param {string} weg       - Bijv. 'A2' of 'N325'
+ * @param {string} hmpWaarde - Bijv. '254.500'
+ * @param {string} richting  - 'Oplopend' of 'Aflopend'
+ * @returns {Promise<{lat: number, lng: number}>}
+ */
+async function haalCoordinatenOp(weg, hmpWaarde, richting) {
+  const zijde = richting === 'Oplopend' ? 'Re' : 'Li';
+  const q     = encodeURIComponent(`${weg} ${hmpWaarde} ${zijde}`);
+  const url   = `https://geodata.nationaalgeoregister.nl/locatieserver/v3/free?fq=type:hectometerpaal&q=${q}&rows=1`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`PDOK niet bereikbaar (${res.status})`);
+
+  const data = await res.json();
+  const punt = data.response?.docs?.[0]?.centroide_ll;
+  if (!punt) throw new Error('Geen hectometerpaal gevonden voor dit wegvak en HMP.');
+
+  // "POINT(4.123456 52.123456)" → { lng, lat }
+  const match = punt.match(/POINT\(([^\s]+)\s+([^)]+)\)/);
+  if (!match) throw new Error('Onverwacht coördinaat-formaat van PDOK.');
+
+  return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+}
+
 export default function Stap2CROW({ formData, bijwerken, fouten }) {
   const [isLadend,       setIsLadend]       = useState(false);
   const [apiFout,        setApiFout]        = useState(null);
   const [overschrijving, setOverschrijving] = useState(false);
+  const [navBerekenen,   setNavBerekenen]   = useState(false);
 
   // Lokale kopie van overrides voor direct bewerken
   const [lokaleOverrides, setLokaleOverrides] = useState(
@@ -307,32 +336,45 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
           </motion.div>
         )}
 
-        {/* ── Navigatieknop naar startpunt afzetting ──────────────── */}
+        {/* ── PDOK Navigatieknop naar startpunt afzetting ─────────── */}
         {!isLadend && heeftResultaten && (() => {
-          // Zoek de meest negatieve HMP-offset (= vroegste waarschuwing / verste bord)
-          const posities   = resultaten.map((r) => parseFloat(lokaleOverrides[r.object_naam] ?? r.hmp_positie));
+          // Posities met eventuele handmatige overrides
+          const posities = resultaten.map((r) =>
+            parseFloat(lokaleOverrides[r.object_naam] ?? r.hmp_positie)
+          ).filter((p) => !isNaN(p));
+
+          if (posities.length === 0) return null;
+
+          // Oplopend (rijdt van laag naar hoog): verste bord = laagste HMP-positie
+          // Aflopend (rijdt van hoog naar laag): verste bord = hoogste HMP-positie
           const richting   = formData.rijrichting;
-          const hmpBasis   = parseFloat(String(formData.hmp).replace(',', '.'));
-
-          // Bij Oplopend liggen vroege borden op lagere HMP → meest negatieve offset = kleinste positie
-          // Bij Aflopend liggen vroege borden op hogere HMP → grootste positie
-          let startHmp;
-          if (richting === 'Oplopend') {
-            startHmp = Math.min(...posities);
-          } else {
-            startHmp = Math.max(...posities);
-          }
-
-          if (isNaN(startHmp) || isNaN(hmpBasis)) return null;
-
+          const startHmp   = richting === 'Oplopend' ? Math.min(...posities) : Math.max(...posities);
           const startHmpLabel = startHmp.toFixed(3);
+          // PDOK gebruikt 1 decimaal voor hectometerpalen (bijv. "A2 254.5 Re")
+          const pdokHmp    = startHmp.toFixed(1);
 
-          function navigeer() {
-            const zoekterm = `${formData.rijksweg} hectometerpaal ${startHmpLabel}`;
-            window.open(
-              `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(zoekterm)}`,
-              '_blank'
-            );
+          async function navigeerViaPDOK() {
+            setNavBerekenen(true);
+            try {
+              // Stap B: exacte GPS via PDOK Locatieserver RWS
+              const { lat, lng } = await haalCoordinatenOp(
+                formData.rijksweg, pdokHmp, richting
+              );
+              // Stap C: open Google Maps routebeschrijving naar GPS-punt
+              window.open(
+                `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                '_blank'
+              );
+            } catch {
+              // Fallback: tekst-zoekopdracht als PDOK niet beschikbaar is
+              const zoekterm = `${formData.rijksweg} hectometerpaal ${startHmpLabel}`;
+              window.open(
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(zoekterm)}`,
+                '_blank'
+              );
+            } finally {
+              setNavBerekenen(false);
+            }
           }
 
           return (
@@ -344,21 +386,35 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
             >
               <motion.button
                 type="button"
-                onClick={navigeer}
-                whileTap={{ scale: 0.97 }}
+                onClick={navigeerViaPDOK}
+                disabled={navBerekenen}
+                whileTap={{ scale: navBerekenen ? 1 : 0.97 }}
                 className="w-full flex items-center justify-center gap-3 min-h-[56px] px-5 py-3
-                           rounded-2xl font-bold text-white text-base"
+                           rounded-2xl font-bold text-white text-base disabled:opacity-70"
                 style={{
-                  background:  'linear-gradient(135deg, #1D4ED8, #2563EB)',
-                  boxShadow:   '0 4px 20px rgba(37,99,235,0.45)',
+                  background: 'linear-gradient(135deg, #15803D, #16A34A)',
+                  boxShadow:  '0 4px 20px rgba(22,163,74,0.4)',
                 }}
               >
-                <span className="text-xl">📍</span>
-                Navigeer naar startpunt afzetting (HMP {startHmpLabel})
+                {navBerekenen ? (
+                  <>
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                      className="inline-block w-5 h-5 border-2 border-white/40 border-t-white rounded-full"
+                    />
+                    Coördinaten ophalen…
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">📍</span>
+                    Navigeer naar startpunt afzetting (HMP {startHmpLabel})
+                  </>
+                )}
               </motion.button>
               <p className="text-slate-500 text-xs text-center leading-relaxed px-2">
-                Berekend op basis van het verste bord — dit is het punt waar u begint
-                met het plaatsen van de afzetting.
+                GPS-locatie via RWS hectometerpaal-database (PDOK) —
+                verste bord van het incident is het startpunt van de afzetting.
               </p>
             </motion.div>
           );

@@ -12,8 +12,8 @@ import { motion } from 'framer-motion';
 import { SegmentedControl, VeldGroep, WizardSectie } from './wizardUi.jsx';
 
 const RICHTING_OPTIES = [
-  { waarde: 'Oplopend', label: '→ Rechts (Oplopend)' },
-  { waarde: 'Aflopend', label: '← Links (Aflopend)' },
+  { waarde: 'Oplopend', label: 'Rechts (Oplopend)' },
+  { waarde: 'Aflopend', label: 'Links (Aflopend)' },
 ];
 
 const STROKEN_OPTIES = [

@@ -75,16 +75,26 @@ async function genereerCalamiteitPDF(calamiteit, opties = {}) {
     doc.on('error', reject);
 
     try {
-      _tekenKoptekst(doc, calamiteit);
-      _tekenCalamiteitGegevens(doc, calamiteit);
-      _tekenOmschrijving(doc, calamiteit);
-      _tekenCROWPlaatsingen(doc, calamiteit.plaatsingen || []);
-      _tekenMaterieel(doc, calamiteit);
-      _tekenRestschadeEnVervolgactie(doc, calamiteit);
-      _tekenVeiligheidschecklist(doc, calamiteit);
+      // Zorg dat alle array-velden nooit undefined zijn zodat de secties niet crashen
+      const cal = {
+        ...calamiteit,
+        plaatsingen: calamiteit.plaatsingen ?? [],
+        materieel:   calamiteit.materieel   ?? [],
+        toeslagen:   calamiteit.toeslagen   ?? [],
+        collegas:    calamiteit.collegas    ?? [],
+        fotos:       calamiteit.fotos       ?? [],
+      };
 
-      if (inclusiefFotos && calamiteit.fotos && calamiteit.fotos.length > 0) {
-        _tekenFotos(doc, calamiteit.fotos);
+      _tekenKoptekst(doc, cal);
+      _tekenCalamiteitGegevens(doc, cal);
+      _tekenOmschrijving(doc, cal);
+      _tekenCROWPlaatsingen(doc, cal.plaatsingen);
+      _tekenMaterieel(doc, cal);
+      _tekenRestschadeEnVervolgactie(doc, cal);
+      _tekenVeiligheidschecklist(doc, cal);
+
+      if (inclusiefFotos && cal.fotos.length > 0) {
+        _tekenFotos(doc, cal.fotos);
       }
 
       doc.end();
@@ -123,21 +133,29 @@ function _tekenCalamiteitGegevens(doc, cal) {
   const kol1X = MARGE;
   const kol2X = MARGE + INHOUD_B / 2 + 10;
 
+  // Zet de DB-waarde om naar een gebruiksvriendelijk richtinglabel
+  const richtingLabel = cal.rijbaan_richting === 'Oplopend'
+    ? 'Rechts (Oplopend)'
+    : cal.rijbaan_richting === 'Aflopend'
+      ? 'Links (Aflopend)'
+      : (cal.rijbaan_richting ?? '—');
+
   const links = [
-    ['Rijksweg',       cal.rijksweg],
-    ['HMP (km)',       String(cal.hmp)],
-    ['Richting',       cal.rijbaan_richting],
-    ['Stroken',        String(cal.aantal_stroken)],
-    ['Status',         cal.status],
-    ['Klant',          cal.klant_naam || '— Onbekende opdrachtgever —'],
+    ['Rijksweg',  cal.rijksweg              ?? '—'],
+    ['HMP (km)',  cal.hmp != null ? String(cal.hmp) : '—'],
+    ['Richting',  richtingLabel],
+    ['Stroken',   cal.aantal_stroken != null ? String(cal.aantal_stroken) : '—'],
+    ['Status',    cal.status                ?? '—'],
+    ['Klant',     cal.klant_naam            || '— Onbekende opdrachtgever —'],
   ];
   const rechts = [
     ['Melding',        _formatteerDatum(cal.tijdstip_melding)],
     ['Aanwezig',       _formatteerDatum(cal.tijdstip_aanwezig)],
     ['Afgerond',       _formatteerDatum(cal.tijdstip_afgerond)],
     ['Inspecteur RWS', cal.naam_inspecteur_rws || '—'],
-    ['Medewerker',     cal.maker_naam || String(cal.maker_id)],
-    ['Collega\'s',     (cal.collegas || []).map((c) => c.naam).join(', ') || '—'],
+    ['Medewerker',     cal.maker_naam || (cal.maker_id ? String(cal.maker_id) : '—')],
+    ['Collega\'s',     (Array.isArray(cal.collegas) ? cal.collegas : [])
+                         .map((c) => c?.naam).filter(Boolean).join(', ') || '—'],
   ];
 
   links.forEach(([label, waarde], i) => {
