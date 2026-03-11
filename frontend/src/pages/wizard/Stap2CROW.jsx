@@ -112,10 +112,91 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
     setOverschrijving(false);
   }
 
+  // ── PDOK GPS-navigatie naar startpunt afzetting ───────────────────────────
+  const navigeerNaarStartpunt = useCallback(async () => {
+    const huidigResultaten = formData.crowResultaten || [];
+    if (huidigResultaten.length === 0) return;
+
+    setLadenPDOK(true);
+    try {
+      // Bereken de startHMP op basis van HMP-posities (inclusief handmatige overrides)
+      // Oplopend (rijdt laag→hoog): vroegste bord = laagste HMP-positie
+      // Aflopend (rijdt hoog→laag): vroegste bord = hoogste HMP-positie
+      const posities   = huidigResultaten.map((r) =>
+        parseFloat(lokaleOverrides[r.object_naam] ?? r.hmp_positie)
+      ).filter((p) => !isNaN(p));
+
+      if (posities.length === 0) throw new Error('Geen geldige posities beschikbaar.');
+
+      const richting     = formData.rijrichting;
+      const startHmpGetal = richting === 'Oplopend' ? Math.min(...posities) : Math.max(...posities);
+
+      // Formatteer exact zoals PDOK verwacht: Nederlandse komma (bijv. 199,0)
+      const pdokHmp    = startHmpGetal.toFixed(1).replace('.', ',');
+      // Verwijder eventuele spaties uit wegnummer: "A 2" → "A2"
+      const schoonWeg  = String(formData.rijksweg).replace(/\s+/g, '').toUpperCase();
+      const zijde      = richting === 'Oplopend' ? 'Re' : 'Li';
+
+      // Strikte PDOK filter queries — geen fuzzy 'q=' maar exacte 'fq=' kolom-filters
+      const basisUrl   = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?fq=type:hectometerpaal';
+
+      // Eerste poging: exact weg + hmp + zijde
+      let url      = `${basisUrl}&fq=wegnummer:${schoonWeg}&fq=hectometerpaal:${pdokHmp}&fq=zijde:${zijde}&rows=1`;
+      let response = await fetch(url);
+      let data     = await response.json();
+
+      // Tweede poging (fallback): weg + hmp zonder zijde
+      if (!data?.response?.docs?.length) {
+        url      = `${basisUrl}&fq=wegnummer:${schoonWeg}&fq=hectometerpaal:${pdokHmp}&rows=1`;
+        response = await fetch(url);
+        data     = await response.json();
+      }
+
+      if (data?.response?.docs?.length > 0) {
+        const punt  = data.response.docs[0].centroide_ll; // "POINT(4.967 52.251)"
+        const match = punt.match(/POINT\(([\d.]+)\s([\d.]+)\)/);
+        if (match) {
+          const lng = match[1];
+          const lat = match[2];
+          // Google Maps routebeschrijving op exacte GPS-coördinaten
+          window.open(
+            `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+            '_blank'
+          );
+          return;
+        }
+      }
+      throw new Error('Exacte hectometerpaal niet gevonden in PDOK-database.');
+    } catch (err) {
+      console.error('PDOK navigatie fout:', err);
+      // Absolute fallback: Google Maps tekst-zoekopdracht
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${formData.rijksweg} hectometerpaal ${formData.hmp}`
+        )}`,
+        '_blank'
+      );
+    } finally {
+      setLadenPDOK(false);
+    }
+  }, [formData.crowResultaten, formData.rijrichting, formData.rijksweg, formData.hmp, lokaleOverrides]);
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   const resultaten = formData.crowResultaten || [];
   const heeftResultaten = resultaten.length > 0;
+
+  // Bereken startHMP voor de knop-label (puur weergave, zelfde logica als in navigeer-functie)
+  const startHmpLabel = (() => {
+    if (!heeftResultaten) return null;
+    const posities = resultaten.map((r) =>
+      parseFloat(lokaleOverrides[r.object_naam] ?? r.hmp_positie)
+    ).filter((p) => !isNaN(p));
+    if (!posities.length) return null;
+    const richting = formData.rijrichting;
+    const val = richting === 'Oplopend' ? Math.min(...posities) : Math.max(...posities);
+    return isNaN(val) ? null : val.toFixed(3);
+  })();
 
   return (
     <div className="flex flex-col gap-4">
@@ -308,107 +389,48 @@ export default function Stap2CROW({ formData, bijwerken, fouten }) {
           </motion.div>
         )}
 
-        {/* ── PDOK Navigatieknop naar startpunt afzetting ─────────── */}
-        {!isLadend && heeftResultaten && (() => {
-          // Posities met eventuele handmatige overrides
-          const posities = resultaten.map((r) =>
-            parseFloat(lokaleOverrides[r.object_naam] ?? r.hmp_positie)
-          ).filter((p) => !isNaN(p));
-
-          if (posities.length === 0) return null;
-
-          // Oplopend (rijdt van laag naar hoog): verste bord = laagste HMP-positie
-          // Aflopend (rijdt van hoog naar laag): verste bord = hoogste HMP-positie
-          const richting   = formData.rijrichting;
-          const startHmp   = richting === 'Oplopend' ? Math.min(...posities) : Math.max(...posities);
-          const startHmpLabel = startHmp.toFixed(3);
-
-          async function navigeerViaPDOK() {
-            setLadenPDOK(true);
-            try {
-              // HMP formatteren zoals PDOK verwacht: punt→komma (bijv. 254.5 → 254,5)
-              const pdokHmpFormatted = parseFloat(startHmp).toFixed(1).replace('.', ',');
-              const zijde            = richting === 'Oplopend' ? 'Re' : 'Li';
-              const basisUrl         = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?fq=type:hectometerpaal&rows=1';
-
-              // Eerste poging: exact op weg + hmp + zijde
-              let res  = await fetch(`${basisUrl}&q=${encodeURIComponent(`${formData.rijksweg} ${pdokHmpFormatted} ${zijde}`)}`);
-              let data = await res.json();
-
-              // Tweede poging (fallback): alleen weg + hmp zonder zijde
-              if (!data?.response?.docs?.length) {
-                res  = await fetch(`${basisUrl}&q=${encodeURIComponent(`${formData.rijksweg} ${pdokHmpFormatted}`)}`);
-                data = await res.json();
-              }
-
-              if (data?.response?.docs?.length) {
-                const punt  = data.response.docs[0].centroide_ll; // "POINT(4.967 52.251)"
-                const match = punt.match(/POINT\(([\d.]+)\s([\d.]+)\)/);
-                if (match) {
-                  const lng = match[1];
-                  const lat = match[2];
-                  window.open(
-                    `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
-                    '_blank'
-                  );
-                  return;
-                }
-              }
-              throw new Error('Geen coördinaten gevonden in PDOK');
-            } catch (err) {
-              // Fallback: Google Maps tekst-zoekopdracht
-              console.error('PDOK navigatie fout:', err);
-              window.open(
-                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${formData.rijksweg} hectometerpaal ${startHmpLabel}`)}`,
-                '_blank'
-              );
-            } finally {
-              setLadenPDOK(false);
-            }
-          }
-
-          return (
-            <motion.div
-              key="navigatie"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col gap-2"
+        {/* ── PDOK GPS-navigatieknop naar startpunt afzetting ────── */}
+        {!isLadend && heeftResultaten && startHmpLabel && (
+          <motion.div
+            key="navigatie"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-2"
+          >
+            <motion.button
+              type="button"
+              onClick={navigeerNaarStartpunt}
+              disabled={ladenPDOK}
+              whileTap={{ scale: ladenPDOK ? 1 : 0.97 }}
+              className="w-full flex items-center justify-center gap-3 min-h-[56px] px-5 py-3
+                         rounded-2xl font-bold text-white text-base disabled:opacity-70"
+              style={{
+                background: 'linear-gradient(135deg, #15803D, #16A34A)',
+                boxShadow:  '0 4px 20px rgba(22,163,74,0.4)',
+              }}
             >
-              <motion.button
-                type="button"
-                onClick={navigeerViaPDOK}
-                disabled={ladenPDOK}
-                whileTap={{ scale: ladenPDOK ? 1 : 0.97 }}
-                className="w-full flex items-center justify-center gap-3 min-h-[56px] px-5 py-3
-                           rounded-2xl font-bold text-white text-base disabled:opacity-70"
-                style={{
-                  background: 'linear-gradient(135deg, #15803D, #16A34A)',
-                  boxShadow:  '0 4px 20px rgba(22,163,74,0.4)',
-                }}
-              >
-                {ladenPDOK ? (
-                  <>
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                      className="inline-block w-5 h-5 border-2 border-white/40 border-t-white rounded-full"
-                    />
-                    Coördinaten ophalen…
-                  </>
-                ) : (
-                  <>
-                    <span className="text-xl">📍</span>
-                    Navigeer naar startpunt afzetting (HMP {startHmpLabel})
-                  </>
-                )}
-              </motion.button>
-              <p className="text-slate-500 text-xs text-center leading-relaxed px-2">
-                GPS-locatie via RWS hectometerpaal-database (PDOK) —
-                verste bord van het incident is het startpunt van de afzetting.
-              </p>
-            </motion.div>
-          );
-        })()}
+              {ladenPDOK ? (
+                <>
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    className="inline-block w-5 h-5 border-2 border-white/40 border-t-white rounded-full"
+                  />
+                  Coördinaten ophalen…
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">📍</span>
+                  Navigeer naar startpunt afzetting (HMP {startHmpLabel})
+                </>
+              )}
+            </motion.button>
+            <p className="text-slate-500 text-xs text-center leading-relaxed px-2">
+              Exacte GPS via RWS hectometerpaal-database (PDOK) —
+              het verste bord is het startpunt van de afzetting.
+            </p>
+          </motion.div>
+        )}
 
         {/* Validatiefout */}
         {fouten.crowResultaten && (
